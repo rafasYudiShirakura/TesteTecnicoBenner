@@ -1,0 +1,114 @@
+<UserControl x:Class="WpfApp.Views.PessoaView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="900">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <DockPanel Grid.Column="0" Margin="0,0,10,0">
+
+            <GroupBox Header="Filtros" DockPanel.Dock="Top">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="Nome:"/>
+                    <TextBox Grid.Column="1" Text="{Binding FiltroNome, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,10,0"/>
+
+                    <TextBlock Grid.Column="2" Text="CPF:"/>
+                    <TextBox Grid.Column="3" Text="{Binding FiltroCpf, UpdateSourceTrigger=PropertyChanged}" Margin="0"/>
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Header="Registros de Pessoas">
+                <DockPanel>
+                    <Button Content="Incluir Pedido" Command="{Binding IncluirPedidoCommand}" Margin="0,0,0,10" DockPanel.Dock="Top" HorizontalAlignment="Left"/>
+
+                    <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}"
+                              AutoGenerateColumns="True"
+                              Height="200"
+                              DockPanel.Dock="Top"/>
+
+                    <GroupBox Header="Pedidos da Pessoa Selecionada" Margin="0,10,0,0">
+                        <DockPanel>
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,0,0,10">
+                                <Button Content="Todos" Command="{Binding LimparFiltroCommand}" Margin="0" Padding="8,4"/>
+                                <Button Content="Pendentes" Command="{Binding FiltrarPendentesCommand}" Margin="5,0,0,0" Padding="8,4"/>
+                                <Button Content="Pagos" Command="{Binding FiltrarPagosCommand}" Margin="5,0,0,0" Padding="8,4"/>
+                                <Button Content="Entregues" Command="{Binding FiltrarEntreguesCommand}" Margin="5,0,0,0" Padding="8,4"/>
+                            </StackPanel>
+
+                            <DataGrid ItemsSource="{Binding PedidosDaPessoaSelecionada}" AutoGenerateColumns="False" Margin="0" VerticalScrollBarVisibility="Auto">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Data" Binding="{Binding DataVenda, StringFormat='dd/MM/yy'}" IsReadOnly="True"/>
+                                    <DataGridTextColumn Header="Valor" Binding="{Binding ValorTotal, StringFormat=C2}" IsReadOnly="True"/>
+                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" IsReadOnly="True"/>
+                                    <DataGridTextColumn Header="Pgto" Binding="{Binding FormaPagamento}" IsReadOnly="True"/>
+
+                                    <DataGridTemplateColumn Header="Ações" Width="*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Button Content="Pago" 
+                                                            Command="{Binding DataContext.MarcarPagoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                            CommandParameter="{Binding}" Margin="2,1" Padding="5,2"/>
+                                                    <Button Content="Enviado" 
+                                                            Command="{Binding DataContext.MarcarEnviadoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                            CommandParameter="{Binding}" Margin="2,1" Padding="5,2"/>
+                                                    <Button Content="Recebido" 
+                                                            Command="{Binding DataContext.MarcarRecebidoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                            CommandParameter="{Binding}" Margin="2,1" Padding="5,2"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </GroupBox>
+                </DockPanel>
+            </GroupBox>
+        </DockPanel>
+
+
+        <GroupBox Grid.Column="1" Header="Cadastro/Edição (Pessoa)">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Nome:"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding CurrentItem.Nome}"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="CPF:"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding CurrentItem.Cpf}"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Endereço:"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding CurrentItem.Endereco}"/>
+
+                <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,10,0,0">
+                    <Button Content="Novo" Command="{Binding NewCommand}" Margin="0"/>
+                    <Button Content="Salvar" Command="{Binding SaveCommand}"/>
+                    <Button Content="Excluir" Command="{Binding DeleteCommand}" Style="{StaticResource DangerButtonStyle}"/>
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+    </Grid>
+</UserControl>
