@@ -2,6 +2,7 @@ using WpfApp.Models;
 using WpfApp.Services;
 using System.Linq;
 using System.Collections.ObjectModel;
+using System.Windows; // Adicione este using
 
 namespace WpfApp.ViewModels
 {
@@ -15,37 +16,25 @@ namespace WpfApp.ViewModels
         public string FiltroNome
         {
             get => _filtroNome;
-            set
-            {
-                if (SetProperty(ref _filtroNome, value)) ApplyFilter();
-            }
+            set { if (SetProperty(ref _filtroNome, value)) ApplyFilter(); }
         }
 
         public string FiltroCodigo
         {
             get => _filtroCodigo;
-            set
-            {
-                if (SetProperty(ref _filtroCodigo, value)) ApplyFilter();
-            }
+            set { if (SetProperty(ref _filtroCodigo, value)) ApplyFilter(); }
         }
 
         public decimal? FiltroValorInicial
         {
             get => _filtroValorInicial;
-            set
-            {
-                if (SetProperty(ref _filtroValorInicial, value)) ApplyFilter();
-            }
+            set { if (SetProperty(ref _filtroValorInicial, value)) ApplyFilter(); }
         }
 
         public decimal? FiltroValorFinal
         {
             get => _filtroValorFinal;
-            set
-            {
-                if (SetProperty(ref _filtroValorFinal, value)) ApplyFilter();
-            }
+            set { if (SetProperty(ref _filtroValorFinal, value)) ApplyFilter(); }
         }
 
         public ProdutoViewModel() : base(new ProdutoService()) { }
@@ -63,6 +52,26 @@ namespace WpfApp.ViewModels
 
         protected override int GetId(Produto item) => item.Id;
         protected override void SetId(Produto item, int id) => item.Id = id;
+
+        protected override void OnSave(object obj)
+        {
+            if (CurrentItem == null) return;
+
+            if (string.IsNullOrWhiteSpace(CurrentItem.Nome) ||
+                string.IsNullOrWhiteSpace(CurrentItem.Codigo))
+            {
+                MessageBox.Show("Nome e Código são campos obrigatórios.", "Erro de Validação", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (CurrentItem.Valor <= 0)
+            {
+                MessageBox.Show("O Valor do produto deve ser maior que zero.", "Erro de Validação", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            base.OnSave(obj);
+        }
 
         private void ApplyFilter()
         {

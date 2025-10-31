@@ -50,12 +50,14 @@
 
                             <DataGrid ItemsSource="{Binding PedidosDaPessoaSelecionada}" AutoGenerateColumns="False" Margin="0" VerticalScrollBarVisibility="Auto">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Data" Binding="{Binding DataVenda, StringFormat='dd/MM/yy'}" IsReadOnly="True"/>
-                                    <DataGridTextColumn Header="Valor" Binding="{Binding ValorTotal, StringFormat=C2}" IsReadOnly="True"/>
-                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" IsReadOnly="True"/>
-                                    <DataGridTextColumn Header="Pgto" Binding="{Binding FormaPagamento}" IsReadOnly="True"/>
+                                    <DataGridTextColumn Header="Data" Binding="{Binding DataVenda, StringFormat='dd/MM/yy'}" IsReadOnly="True" Width="Auto"/>
+                                    <DataGridTextColumn Header="Valor" Binding="{Binding ValorTotal, StringFormat=C2}" IsReadOnly="True" Width="Auto"/>
 
-                                    <DataGridTemplateColumn Header="Ações" Width="*">
+                                    <DataGridTextColumn Header="Produtos" Binding="{Binding ProdutosResumo}" IsReadOnly="True" Width="*"/>
+                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" IsReadOnly="True" Width="Auto"/>
+                                    <DataGridTextColumn Header="Pgto" Binding="{Binding FormaPagamento}" IsReadOnly="True" Width="Auto"/>
+
+                                    <DataGridTemplateColumn Header="Ações" Width="Auto">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal">

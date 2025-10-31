@@ -98,11 +98,12 @@
                         </StackPanel>
 
                         <DataGrid ItemsSource="{Binding CurrentItem.Produtos}" 
-                                  AutoGenerateColumns="True"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
                                   Margin="0"
                                   Height="150">
                             <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="Ação">
+                                <DataGridTemplateColumn Header="Ação" Width="Auto">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Button Content="Remover" 
@@ -114,6 +115,10 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="Produto" Binding="{Binding Produto.Nome}" Width="*"/>
+                                <DataGridTextColumn Header="Quantidade" Binding="{Binding Quantidade}" Width="Auto"/>
+                                <DataGridTextColumn Header="Subtotal" Binding="{Binding Subtotal, StringFormat=C2}" Width="Auto"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </DockPanel>

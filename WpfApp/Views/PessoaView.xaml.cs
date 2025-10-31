@@ -7,8 +7,17 @@ namespace WpfApp.Views
         public PessoaView()
         {
             InitializeComponent();
+
+            this.IsVisibleChanged += (s, e) =>
+            {
+                if ((bool)e.NewValue == true)
+                {
+                    if (DataContext is WpfApp.ViewModels.PessoaViewModel vm)
+                    {
+                        vm.AtualizarDadosPedidos();
+                    }
+                }
+            };
         }
-        
-        
     }
 }

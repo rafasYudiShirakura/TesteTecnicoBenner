@@ -3,9 +3,9 @@ using WpfApp.Services;
 using System.Linq;
 using System.Collections.ObjectModel;
 using System;
-using System.Windows.Input; 
-using System.Windows;      
-using System.Collections.Generic; 
+using System.Windows.Input;
+using System.Windows;
+using System.Collections.Generic;
 
 namespace WpfApp.ViewModels
 {
@@ -16,7 +16,7 @@ namespace WpfApp.ViewModels
 
         private readonly PedidoService _pedidoService = new PedidoService();
         private ObservableCollection<Pedido> _pedidosDaPessoaSelecionada;
-        private List<Pedido> _allPedidosDaPessoa; 
+        private List<Pedido> _allPedidosDaPessoa;
 
         public ObservableCollection<Pedido> PedidosDaPessoaSelecionada
         {
@@ -62,6 +62,7 @@ namespace WpfApp.ViewModels
                     PedidosDaPessoaSelecionada?.Clear();
                     _allPedidosDaPessoa?.Clear();
                 }
+                CommandManager.InvalidateRequerySuggested();
             }
         }
 
@@ -70,18 +71,23 @@ namespace WpfApp.ViewModels
             PedidosDaPessoaSelecionada = new ObservableCollection<Pedido>();
             _allPedidosDaPessoa = new List<Pedido>();
 
+            Func<object, bool> canExecutePessoaSelecionada = (p) => SelectedItem != null;
+
             MarcarPagoCommand = new RelayCommand(p => MarcarStatus((Pedido)p, StatusPedido.Pago), p => CanMarcarStatus((Pedido)p, StatusPedido.Pago));
             MarcarEnviadoCommand = new RelayCommand(p => MarcarStatus((Pedido)p, StatusPedido.Enviado), p => CanMarcarStatus((Pedido)p, StatusPedido.Enviado));
             MarcarRecebidoCommand = new RelayCommand(p => MarcarStatus((Pedido)p, StatusPedido.Recebido), p => CanMarcarStatus((Pedido)p, StatusPedido.Recebido));
 
-            FiltrarEntreguesCommand = new RelayCommand(_ => Filtrar(StatusPedido.Recebido));
-            FiltrarPagosCommand = new RelayCommand(_ => Filtrar(StatusPedido.Pago));
-            FiltrarPendentesCommand = new RelayCommand(_ => Filtrar(StatusPedido.Pendente));
-            LimparFiltroCommand = new RelayCommand(_ => LoadPedidosDaPessoa(SelectedItem.Id, true));
+            FiltrarEntreguesCommand = new RelayCommand(_ => Filtrar(StatusPedido.Recebido), canExecutePessoaSelecionada);
+            FiltrarPagosCommand = new RelayCommand(_ => Filtrar(StatusPedido.Pago), canExecutePessoaSelecionada);
+            FiltrarPendentesCommand = new RelayCommand(_ => Filtrar(StatusPedido.Pendente), canExecutePessoaSelecionada);
+            LimparFiltroCommand = new RelayCommand(_ => LoadPedidosDaPessoa(SelectedItem.Id, true), canExecutePessoaSelecionada);
         }
+
+        protected override bool CanIncluirPedido(object obj) => SelectedItem != null;
 
         protected override Pessoa Clone(Pessoa item)
         {
+            if (item == null) return new Pessoa(); 
             return new Pessoa
             {
                 Id = item.Id,
@@ -91,22 +97,37 @@ namespace WpfApp.ViewModels
             };
         }
 
-        protected override int GetId(Pessoa item) => item.Id;
-        protected override void SetId(Pessoa item, int id) => item.Id = id;
+        protected override int GetId(Pessoa item) => item?.Id ?? 0; 
+        protected override void SetId(Pessoa item, int id)
+        {
+            if (item != null) item.Id = id; 
+        }
 
         protected override void OnSave(object obj)
         {
-            if (CurrentItem == null) return;
+            if (CurrentItem == null)
+            {
+                MessageBox.Show("Não há dados para salvar.", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
             if (!ValidationService.IsValidCpf(CurrentItem.Cpf))
             {
-                MessageBox.Show("O CPF fornecido é inválido ou está incompleto.", "Erro de Validação", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("O CPF fornecido é inválido ou está incompleto (deve ter 11 dígitos).", "Erro de Validação", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(CurrentItem.Nome))
             {
                 MessageBox.Show("O Nome é obrigatório.", "Erro de Validação", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var todasPessoas = _dataService.GetAll();
+            bool cpfDuplicado = todasPessoas.Any(p => p.Cpf == CurrentItem.Cpf && p.Id != CurrentItem.Id);
+            if (cpfDuplicado)
+            {
+                MessageBox.Show("Este CPF já está cadastrado no sistema.", "Erro de Duplicidade", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -139,20 +160,28 @@ namespace WpfApp.ViewModels
             Items = new ObservableCollection<Pessoa>(filteredItems.ToList());
         }
 
-
         private void LoadPedidosDaPessoa(int pessoaId, bool forceReload = true)
         {
-            if (forceReload)
+            if (forceReload || _allPedidosDaPessoa == null)
             {
                 _allPedidosDaPessoa = _pedidoService.GetAll()
                    .Where(p => p.Pessoa.Id == pessoaId)
                    .ToList();
+            }
+            foreach (var pedido in _allPedidosDaPessoa)
+            {
+                if (pedido.Pessoa == null) pedido.Pessoa = SelectedItem;
+                foreach (var item in pedido.Produtos.Where(i => i.Produto == null))
+                {
+                    item.Produto = new Produto { Nome = "Produto Excluído" };
+                }
             }
             PedidosDaPessoaSelecionada = new ObservableCollection<Pedido>(_allPedidosDaPessoa);
         }
 
         private void Filtrar(StatusPedido status)
         {
+            if (_allPedidosDaPessoa == null) return;
             PedidosDaPessoaSelecionada = new ObservableCollection<Pedido>(_allPedidosDaPessoa.Where(p => p.Status == status).ToList());
         }
 
@@ -169,12 +198,20 @@ namespace WpfApp.ViewModels
                 try
                 {
                     _pedidoService.Update(pedido);
-                    LoadPedidosDaPessoa(SelectedItem.Id, true);
+                    AtualizarDadosPedidos();
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show($"Erro ao atualizar status do pedido: {ex.Message}");
                 }
+            }
+        }
+
+        public void AtualizarDadosPedidos()
+        {
+            if (SelectedItem != null)
+            {
+                LoadPedidosDaPessoa(SelectedItem.Id, true); 
             }
         }
     }
