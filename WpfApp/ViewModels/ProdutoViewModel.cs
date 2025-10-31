@@ -2,7 +2,7 @@ using WpfApp.Models;
 using WpfApp.Services;
 using System.Linq;
 using System.Collections.ObjectModel;
-using System.Windows; // Adicione este using
+using System.Windows; 
 
 namespace WpfApp.ViewModels
 {
